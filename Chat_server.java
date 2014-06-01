@@ -20,65 +20,54 @@ public class Chat_server extends UnicastRemoteObject implements Inter {
 	
 	Database db = new Database("Data.xml");
 	
-	@SuppressWarnings("rawtypes")
-	ArrayList<ArrayList<String>> messages = null;
-	String everyone;
+	static HashMap<Integer, ArrayList> messages = new HashMap<Integer, ArrayList>();
 	static HashMap<Integer, String> users = new HashMap<Integer, String>();
 	static int clicount;
 	
     Chat_server() throws RemoteException {
 
         super();
+
     }
     
     public int loginCheck(String username,String password) throws RemoteException{
     	Boolean validUser = db.checkLogin(username, password);
     	if(validUser){
 		users.put(++clicount, username);
-		messages.add(clicount, new ArrayList<String>());
-		messages.get(clicount).add(everyone);
-		return clicount;
+    		return clicount;
     	}
     	return -1;
     	
     }
 
-    @SuppressWarnings("unchecked")
-	public void chat(Integer From,Integer To, String msg) throws RemoteException {
-    	String sender  = users.get(From);
-    	String reciever = users.get(To);
-    	String addextra = null;
-    	if(To.intValue()==0){
-    		everyone += sender+" to "+ "All" +" : "+msg + "\n";
-    	}
-        for (int u = 1; u <= clicount; u++){
-            boolean flag = false;
-        	if(u==From)
-        		sender = "Me";
-        	else
-        		sender = users.get(From);
-        	if(u==To)
-        		reciever = "Me";
-        	else if(To==0)
-        		reciever = "All";
-        	else
-        		reciever = users.get(To); 
-        	
-        if (!(messages.get(u).isEmpty())) {
-        	addextra = sender+" to "+ reciever+" : "+msg +"\n";
-        	messages.get(u).add(addextra);
-        	flag = true;
-        	}
-            
-        if (!flag) {
-            String al = "";
-            al = sender+" to "+ reciever+" : "+msg + "\n";
-            messages.get(u).add(al);
+    public void chat(Integer a, String msg) throws RemoteException {
+
+        boolean flag = false;
+
+        if (!messages.isEmpty()) {
+
+            Integer numbers[] = new Integer[messages.size()];
+
+            messages.keySet().toArray(numbers);
+
+            for (int i = 0; i < numbers.length; i++) {
+                if (a.intValue() == numbers[i].intValue()) {
+                    ArrayList temp;
+                    temp = messages.get(a);
+                    temp.add(msg);
+                    messages.put(a, temp);
+                    flag = true;
+                }
+            }
         }
-       }
+        if (!flag) {
+            ArrayList<String> al = new ArrayList<String>();
+            al.add(msg);
+            messages.put(a, al);
+        }
     }
-/*
-    public String get(Integer a,Integer UserID) throws RemoteException {
+
+    public String get(Integer a) throws RemoteException {
         Integer numbers[] = new Integer[messages.size()];
         messages.keySet().toArray(numbers);
         boolean flag = false;
@@ -105,14 +94,40 @@ public class Chat_server extends UnicastRemoteObject implements Inter {
         }
         return "test";
     }
-  */
     //method used for polling
 
-    public String get(Integer UserID) throws RemoteException {
+    public String get() throws RemoteException {
+        Set s = messages.keySet();
+        Iterator use = s.iterator();
+        String cusr = null;
         String all = "";
-        Iterator iter = messages.get(UserID).iterator();
-        while(iter.hasNext())
-        	all += (String) iter.next();
+        String final_messages = null;
+        while (use.hasNext()) {
+            ArrayList temp;
+            int temp_no = (Integer) use.next();
+            temp = messages.get((Integer) temp_no);
+            String all_messages = "";
+            if (temp != null) {
+                Iterator b = temp.iterator();
+               // String final_messages = "<html><I><tt>Message to Client " + temp_no + ": </tt></I>";
+                if(temp_no == 0)
+                
+                	final_messages = "Message to All " +  ": ";                
+                
+                else{
+                 cusr = users.get((Integer)temp_no);
+		if(cusr==null)
+			continue;
+                 final_messages = "Message to " + cusr + ": ";                
+                }
+                while (b.hasNext()) {
+                    all_messages = final_messages + (String) b.next();
+                    //all += (all_messages + "<br>");
+                    all += (all_messages + "\n");
+                    
+                }
+            }
+        }
         return all;
     }
 
@@ -124,9 +139,6 @@ public class Chat_server extends UnicastRemoteObject implements Inter {
             Chat_server server = new Chat_server();
             //put the local instance in the registry
             Naming.rebind("CHAT-SERVER", server);
-            server.messages = new ArrayList<ArrayList<String>>();
-            server.messages.add(0, new ArrayList<String>());
-            server.everyone = new String(" ");
             System.out.println("Server waiting.....");
         } catch (java.net.MalformedURLException me) {
             System.out.println("Malformed URL: " + me.toString());
@@ -155,10 +167,4 @@ public class Chat_server extends UnicastRemoteObject implements Inter {
 		ulist = (HashMap<Integer, String>) users.clone();
 		return ulist;
 	}
-
-	public void clear(Integer UserID) throws RemoteException {
-		// TODO Auto-generated method stub
-		messages.get(UserID).clear();
-	}
 }
-

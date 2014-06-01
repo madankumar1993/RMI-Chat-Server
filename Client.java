@@ -1,12 +1,10 @@
 
 
 import java.awt.BorderLayout;
-import java.awt.Button;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
-import java.awt.Label;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -30,6 +28,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.UIManager;
 
 
 public class Client extends JFrame {
@@ -97,30 +96,8 @@ public class Client extends JFrame {
 		@Override
 		public void windowClosed(WindowEvent e) {
 			// TODO Auto-generated method stub
-			// TODO Auto-generated method stub
 			
-						//set the security manager for the client
-			            System.setSecurityManager(new RMISecurityManager());
-			//get the remote object from the registry
-			            try {
-			                System.out.println("Security Manager loaded");
-			                //String url = "rmi://172.16.18.176/CHAT-SERVER";
-			                String url = ipField.getText().toString();
-			                Inter remoteObject = (Inter) Naming.lookup(url);
-			                System.out.println(" Got message ");
-			                remoteObject.exitUser(UserID);
-			                }
-			             catch (RemoteException exc) {
-			                System.out.println("Error in lookup: " + exc.toString());
-			            } catch (java.net.MalformedURLException exc) {
-			                System.out.println("Malformed URL: " + exc.toString());
-			            } catch (java.rmi.NotBoundException exc) {
-			                System.out.println("NotBound: " + exc.toString());
-			            } 
-						
-						
-					}
-					
+		}
 		
 		@Override
 		public void windowActivated(WindowEvent e) {
@@ -145,8 +122,8 @@ public class Client extends JFrame {
 		   public   JTextField ipField = null;
 		   public   JTextField userName = null;
 		   public   JPasswordField passWord = null;
-		   public DefaultListModel listmodel=null;
-		   public   JList targetlist = null;
+		   public DefaultListModel<String> listmodel=null;
+		   public   JList<String> targetlist = null;
 		   public   JScrollPane trgtscroll = null;
 		   public   JButton signup = null;
 		   public   JButton connectButton = null;
@@ -163,8 +140,7 @@ public class Client extends JFrame {
 		   public   int connectionStatus = DISCONNECTED;
 		   public  Poll pollObj = null;
 		   
-		   @SuppressWarnings("deprecation")
-		public void decidePoll(){
+		   public void decidePoll(){
 			   if(connectionStatus == CONNECTED){
 				   pollObj = new Poll();
 				   pollObj.start();
@@ -223,7 +199,6 @@ public class Client extends JFrame {
 		      
 		      pane.add(passpane,BorderLayout.WEST);
 		      signup = new JButton("Sign up");
-		      signup.setMnemonic(KeyEvent.VK_U);
 		      signup.addActionListener(new ActionListener() {
 				
 				@Override
@@ -271,7 +246,6 @@ public class Client extends JFrame {
 		                  connectButton.setEnabled(true);
 		                  disconnectButton.setEnabled(false);
 		                  sendmessage.setEnabled(false);
-		                  clearButton.setEnabled(false);
 		                  connectionStatus = DISCONNECTED;
 		                  signup.setEnabled(true);
 		                  decidePoll();
@@ -286,7 +260,7 @@ public class Client extends JFrame {
 		            	 }
 		                }
 		         };
-		      connectButton = new JButton("Sign In");
+		      connectButton = new JButton("Connect");
 		      connectButton.setMnemonic(KeyEvent.VK_C);
 		      connectButton.setActionCommand("connect");
 		      connectButton.addActionListener(new ActionListener() {
@@ -298,7 +272,7 @@ public class Client extends JFrame {
 				}
 			});
 		      connectButton.setEnabled(true);
-		      disconnectButton = new JButton("Sign Out");
+		      disconnectButton = new JButton("Disconnect");
 		      disconnectButton.setMnemonic(KeyEvent.VK_D);
 		      disconnectButton.setActionCommand("disconnect");
 		      disconnectButton.addActionListener(disconnectButtonListener);
@@ -325,8 +299,7 @@ public class Client extends JFrame {
                  Inter remoteObject = (Inter) Naming.lookup(url);
                  System.out.println(" Got message ");
                  String User =userName.getText().toString();
-                 @SuppressWarnings("deprecation")
-				String Pass = passWord.getText().toString();
+                 String Pass = passWord.getText().toString();
                  if(!User.isEmpty() && !Pass.isEmpty()){
                  remoteObject.addUser(User, Pass);
                  }
@@ -353,8 +326,6 @@ public class Client extends JFrame {
 		    		// set the security manager for the client
 		    		        System.setSecurityManager(new RMISecurityManager());
 		    		//get the remote object from the registry
-		    		        String target = null;
-		    		        if(!(chatLine.getText().toString().equals(""))){
 		    		        try {
 		    		            System.out.println("Security Manager loaded");
 		    		//String url = "//localhost/CHAT-SERVER";
@@ -362,10 +333,9 @@ public class Client extends JFrame {
 		    		            String url = ipField.getText().toString();
 		    		            Inter remoteObject = (Inter) Naming.lookup(url);
 		    		            System.out.println("Got remote object");
-		    		            Integer i = new Integer(0);
-		    		            target = "All";
+		    		            Integer i = 0;
 			    		        if(targetlist.getSelectedIndex()!= 0){ 
-		    		           target = targetlist.getSelectedValue().toString();
+		    		            String target = targetlist.getSelectedValue().toString();
 		    		             for (Entry<Integer, String> entry : ulist.entrySet()) {
 		    		                if (target.equals(entry.getValue())) {
 		    		                     i = entry.getKey();
@@ -375,7 +345,7 @@ public class Client extends JFrame {
 			    		        }
 		    		            String message = chatLine.getText();
 		    		            chatLine.setText("");
-		    		            remoteObject.chat(UserID,i,message);
+		    		            remoteObject.chat(i, message);
 		    		            System.out.println(" Sent message ");
 		    		        } catch (RemoteException exc) {
 		    		            System.out.println("Error in lookup: " + exc.toString());
@@ -385,45 +355,22 @@ public class Client extends JFrame {
 		    		            System.out.println("NotBound: " + exc.toString());
 		    		        }
 		    	  }
-		    		        }
-		    	  
 		      };
 		      
 		      clearButtonListener = new ActionAdapter(){
 		    	  public void actionPerformed(ActionEvent e) {
-				    		// set the security manager for the client
-				    		        System.setSecurityManager(new RMISecurityManager());
-				    		//get the remote object from the registry
-				    		        try {
-				    		            System.out.println("Security Manager loaded");
-				    		//String url = "//localhost/CHAT-SERVER";
-				    		            //String url = "rmi://172.16.18.176/CHAT-SERVER";
-				    		            String url = ipField.getText().toString();
-				    		            Inter remoteObject = (Inter) Naming.lookup(url);
-				    		            System.out.println("Got remote object");
-				    		            remoteObject.clear(UserID);
-				    		            chatText.setText("");
-				    		            System.out.println(" Clearing History ");
-				    		        } catch (RemoteException exc) {
-				    		            System.out.println("Error in lookup: " + exc.toString());
-				    		        } catch (java.net.MalformedURLException exc) {
-				    		            System.out.println("Malformed URL: " + exc.toString());
-				    		        } catch (java.rmi.NotBoundException exc) {
-				    		            System.out.println("NotBound: " + exc.toString());
-				    		        }
-				    	  }
+		    		  System.exit(0);
+					}
 		      };
 		      
 		      
 		      
 		      sendmessage = new JButton("Send   ");
 		      sendmessage.setEnabled(false);
-		      sendmessage.setMnemonic(KeyEvent.VK_S);
 		      sendmessage.setActionCommand("send");
 		      sendmessage.addActionListener(sendButtonListener);
-		      clearButton = new JButton("Clear   ");
-		      clearButton.setEnabled(false);
-		      clearButton.setMnemonic(KeyEvent.VK_X);
+		      clearButton = new JButton("clear");
+		      clearButton.setEnabled(true);
 		      clearButton.setActionCommand("clear");
 		      clearButton.addActionListener(clearButtonListener);
 		      
@@ -452,8 +399,8 @@ public class Client extends JFrame {
 		         JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 		      	
 		      	trgtscroll = new JScrollPane();
-		      	targetlist = new JList();
-		      	targetlist.setModel((listmodel=new DefaultListModel()));
+		      	targetlist = new JList<String>();
+		      	targetlist.setModel((listmodel=new DefaultListModel<String>()));
 		        trgtscroll.setViewportView(targetlist);
 
 			      listmodel.addElement("Everyone       ");
@@ -466,12 +413,7 @@ public class Client extends JFrame {
 		      chatPane.add(trgtscroll,BorderLayout.EAST);
 		      chatPane.setPreferredSize(new Dimension(200, 300));
 		      
-		      JPanel typeclearpane = new JPanel(new BorderLayout());
-		      typeclearpane.add(new JLabel("Type your Message: "),BorderLayout.WEST);
-		      typeclearpane.add(clearButton,BorderLayout.EAST);
-		      
 		      JPanel typesendpane = new JPanel(new BorderLayout());
-		      
 		      typesendpane.add(chatLine,BorderLayout.WEST);
 		      typesendpane.add(sendmessage,BorderLayout.EAST);
 		      //chatPane.add(chatLine, BorderLayout.SOUTH);
@@ -486,15 +428,10 @@ public class Client extends JFrame {
 		      JPanel extraPane2 = new JPanel(new BorderLayout());
 		      extraPane2.add(chatPane, BorderLayout.CENTER);
 		       extraPane2.add(pane,BorderLayout.SOUTH);
-		       
-		       JPanel extraPane5 = new JPanel(new BorderLayout());
-		       extraPane5.add(typeclearpane, BorderLayout.CENTER);
-			   extraPane5.add(typesendpane, BorderLayout.SOUTH);
-			      
-		       
+		      
 		      JPanel extraPane3 = new JPanel(new BorderLayout());
 		      extraPane3.add(extraPane2, BorderLayout.CENTER);
-		      extraPane3.add(extraPane5, BorderLayout.SOUTH);
+		      extraPane3.add(typesendpane, BorderLayout.SOUTH);
 		      
 		      JPanel extraPane4 = new JPanel(new BorderLayout());
 		      extraPane4.add(extraPane3, BorderLayout.CENTER);
@@ -510,7 +447,7 @@ public class Client extends JFrame {
 		      mainFrame = new JFrame("RMI Chat");
 		      mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		      mainFrame.setContentPane(mainPane);
-		      mainFrame.setPreferredSize(new Dimension(700, 525));
+		      mainFrame.setPreferredSize(new Dimension(700, 500));
 //		      mainFrame.setSize(mainFrame.getMaximumSize());
 		      mainFrame.setLocation(200, 200);
 		      mainFrame.pack();
@@ -519,7 +456,6 @@ public class Client extends JFrame {
 		 
 		}
 		
-		@SuppressWarnings("deprecation")
 		private void connectButtonListener(ActionEvent e) {
         	// Request a connection initiation
         	
@@ -551,7 +487,6 @@ public class Client extends JFrame {
               disconnectButton.setEnabled(true);
               signup.setEnabled(false);
               sendmessage.setEnabled(true);
-              clearButton.setEnabled(true);
               ipField.setEnabled(false);
               userName.setEnabled(false);
               passWord.setEnabled(false);
@@ -577,7 +512,7 @@ public class Client extends JFrame {
 				  if(!s.contentEquals(username)){
                       boolean exists = false;
                       for(int i = 1; i < listmodel.getSize() ; i++){
-                          if(((String) listmodel.getElementAt(i)).contentEquals(s)){
+                          if(listmodel.getElementAt(i).contentEquals(s)){
                               exists = true;
                           }
                       }
@@ -588,7 +523,7 @@ public class Client extends JFrame {
 			  }
 
 				  for(int j=1; j< listmodel.getSize();j++){ 
-						cusr = (String) listmodel.getElementAt(j);  
+						cusr = listmodel.getElementAt(j);  
 					  
 	                      boolean exists = false;
 	                      //for(int i = 0; i < users.size() ; i++){
@@ -620,7 +555,7 @@ public class Client extends JFrame {
 		                   String url = ipField.getText().toString();
 		                   Inter remoteObject = (Inter) Naming.lookup(url);
 		                   System.out.println(" Got message ");
-		                   String all = remoteObject.get(UserID);
+		                   String all = remoteObject.get();
 		                   chatText.setText(all);
 		                   ulist = remoteObject.currentusers();
 		                   updateuser();
@@ -669,4 +604,3 @@ public class Client extends JFrame {
 		   
 	   }
 	}
-
