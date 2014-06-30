@@ -19,5 +19,8 @@ In a nut-shell, <br>
 TODO - mention steps to start server and chat clients. 
 
 
-Server start: 
-<code> java -Djava.security.policy=my.policy Chat_server </code>
+Server start: <br>
+Run <b>server.sh</b> bash script file
+
+Client start: <br>
+<code> java -Djava.security.policy=my.policy Client </code>
